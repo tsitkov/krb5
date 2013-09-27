@@ -188,7 +188,7 @@ process_tgs_req(struct server_handle *handle, krb5_data *pkt,
 
     if (!header_ticket) {
         errcode = KRB5_NO_TKT_SUPPLIED;        /* XXX? */
-        status="UNEXPECTED NULL in header_ticket";
+        status="VALIDATE_HEADER_TICKET";
         goto cleanup;
     }
     errcode = kau_make_tkt_id(kdc_context, header_ticket,
@@ -203,7 +203,7 @@ process_tgs_req(struct server_handle *handle, krb5_data *pkt,
     errcode = kdc_find_fast(&request, &scratch, subkey,
                             header_ticket->enc_part2->session, state, NULL);
     if (errcode !=0) {
-        status = "kdc_find_fast";
+        status = "FIND_FAST";
         goto cleanup;
     }
 
@@ -633,7 +633,7 @@ process_tgs_req(struct server_handle *handle, krb5_data *pkt,
         /* assemble new transited field into allocated storage */
         if (header_enc_tkt->transited.tr_type !=
             KRB5_DOMAIN_X500_COMPRESS) {
-            status = "BAD_TRTYPE";
+            status = "VALIDATE_TRANSIT_TYPE";
             errcode = KRB5KDC_ERR_TRTYPE_NOSUPP;
             goto cleanup;
         }
@@ -645,7 +645,7 @@ process_tgs_req(struct server_handle *handle, krb5_data *pkt,
                               header_ticket->server,
                               enc_tkt_reply.client,
                               request->server))) {
-            status = "ADD_TR_FAIL";
+            status = "ADD_TO_TRANSITED_LIST";
             goto cleanup;
         }
         newtransited = 1;
@@ -716,7 +716,7 @@ process_tgs_req(struct server_handle *handle, krb5_data *pkt,
     if (!isflagset(request->kdc_options, KDC_OPT_ENC_TKT_IN_SKEY))
         krb5_free_keyblock_contents(kdc_context, &encrypting_key);
     if (errcode) {
-        status = "TKT_ENCRYPT";
+        status = "ENCRYPT_TICKET";
         goto cleanup;
     }
     ticket_reply.enc_part.kvno = ticket_kvno;
@@ -733,8 +733,9 @@ process_tgs_req(struct server_handle *handle, krb5_data *pkt,
                                         &reply,
                                         &reply_encpart);
         if (errcode) {
-            status = "KDC_RETURN_S4U2SELF_PADATA";
+            status = "FETCH_S4U2SELF_PADATA";
             au_state->status = status;
+            goto cleanup;
         }
         kau_s4u2self(kdc_context, errcode ? FALSE : TRUE, au_state);
         if (errcode)
@@ -773,13 +774,13 @@ process_tgs_req(struct server_handle *handle, krb5_data *pkt,
     errcode  = kdc_fast_response_handle_padata(state, request, &reply,
                                                subkey ? subkey->enctype : header_ticket->enc_part2->session->enctype);
     if (errcode !=0 ) {
-        status = "Preparing FAST padata";
+        status = "HANDLE_FAST_RESPONSE_PADATA";
         goto cleanup;
     }
     errcode =kdc_fast_handle_reply_key(state,
                                        subkey?subkey:header_ticket->enc_part2->session, &reply_key);
     if (errcode) {
-        status  = "generating reply key";
+        status  = "HANDLE_FAST_REPLY_KEY";
         goto cleanup;
     }
     errcode = return_enc_padata(kdc_context, pkt, request,
@@ -1060,7 +1061,7 @@ gen_session_key(kdc_realm_t *kdc_active_realm, krb5_kdc_req *req,
     retval = krb5_c_make_random_key(kdc_context, useenctype, skey);
     if (retval != 0) {
         /* random key failed */
-        *status = "RANDOM_KEY_FAILED";
+        *status = "MAKE_RANDOM_KEY";
         goto cleanup;
     }
 cleanup:

@@ -1604,7 +1604,7 @@ validate_transit_path(krb5_context context,
     return 0;
 }
 
-
+#if 0
 /* Main logging routines for ticket requests.
 
    There are a few simple cases -- unparseable requests mainly --
@@ -1653,14 +1653,14 @@ log_as_req(krb5_context context, const krb5_fulladdr *from,
     }
     krb5_db_audit_as_req(context, request, client, server, authtime,
                          errcode);
-#if 0
+//#if 0
     /* Sun (OpenSolaris) version would probably something like this.
        The client and server names passed can be null, unlike in the
        logging routines used above.  Note that a struct in_addr is
        used, but the real address could be an IPv6 address.  */
     audit_krb5kdc_as_req(some in_addr *, (in_port_t)from->port, 0,
                          cname, sname, errcode);
-#endif
+//#endif
 }
 
 /*
@@ -1800,6 +1800,7 @@ log_tgs_alt_tgt(krb5_context context, krb5_principal p)
     /* OpenSolaris: audit_krb5kdc_tgs_req_alt_tgt(...) */
 }
 
+#endif
 krb5_boolean
 enctype_requires_etype_info_2(krb5_enctype enctype)
 {
